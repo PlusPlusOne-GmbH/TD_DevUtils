@@ -48,14 +48,14 @@ def folder( filepath ):
         ]
     )
 
-def fromParameter(parameter:Par):
+def fromParameter(parameter:Par, minMax = False):
     if parameter.style.lower() in ["float", "in",
                            "rgb", "rgba", 
                            "xy" "xyz", "xyzw",
                            "uv", "uvw", "wh"]:
         return ConfigValue(
             parameter.default,
-            validator = lambda value: parameter.min <= value <= parameter.max,
+            validator = (lambda value: parameter.min <= value <= parameter.max) if minMax else lambda value: True,
             comment = parameter.help
         )
     if parameter.style.lower() in ["menu", "strmenu"]:

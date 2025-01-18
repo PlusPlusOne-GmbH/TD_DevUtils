@@ -39,11 +39,16 @@ class JsonConfig:
 	def Filepath(self):
 		self.log("Generating Filepath")
 		currentEnv = self.ownerComp.par.Currentenv.eval()
-		path = pathlib.Path( self.ownerComp.par.Filepath.eval() )
-		path.parent.mkdir( parents=True, exist_ok=True )
+		path = self.BaseFilepath
 		if self.ownerComp.par.Useenv.eval() and currentEnv:
 			path = path.with_stem(f"{currentEnv}.{path.stem}")
 		path.touch()
+		return path
+	
+	@property
+	def BaseFilepath(self):
+		path = pathlib.Path( self.ownerComp.par.Filepath.eval() )
+		path.parent.mkdir( parents=True, exist_ok=True )
 		return path
 
 	def readFileJson(self):
@@ -64,7 +69,7 @@ class JsonConfig:
 		self.log("Saving Schema")
 		if self.ownerComp.par.Exportschema.eval():
 			self.saveSchema()
-			self.Data["$schema"] = f"./" + str( self.Filepath.with_suffix(".schema.json" ).name )
+			self.Data["$schema"] = f"./" + str( self.BaseFilepath.with_suffix(".schema.json" ).name )
 
 		if self.ownerComp.par.Readonly.eval() and not force: 
 			self.log("Read onlymode activated, not overwriting file!")
@@ -77,7 +82,7 @@ class JsonConfig:
 	
 	def saveSchema(self):
 		self.log("Saving Schema")
-		with open( self.Filepath.with_suffix(".schema.json" ), "wt" ) as schemaFile:
+		with open( self.BaseFilepath.with_suffix(".schema.json" ), "wt" ) as schemaFile:
 			schemaFile.write( json.dumps( self.Data._GetSchema(), indent = 1 ) )
 
 	def loadFromJson(self, json_string):
