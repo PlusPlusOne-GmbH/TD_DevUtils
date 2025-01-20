@@ -4,7 +4,7 @@
 '''Info Header Start
 Name : extCallbackManager
 Author : Wieland@AMB-ZEPH15
-Saveorigin : Project.toe
+Saveorigin : DevUtils.toe
 Saveversion : 2023.12000
 Info Header End'''
 
@@ -21,7 +21,8 @@ class extCallbackManager:
 		self.ownerComp : baseCOMP 	= ownerComp
 		self.pageName : str 		= 'Callbacks'
 		self.callbackTemplate : DAT = self.ownerComp.op('default_callbacks')
-
+		self.Execute 				= self.GetMethod
+		self.Do_Callback 			= self.DoCallback
 	@property
 	def owner(self) -> OP:
 		return self.ownerComp.par.Owner.eval()
@@ -53,37 +54,43 @@ class extCallbackManager:
 	def empty_callback(self, *args, **kwargs):
 		return
 	
+	
+
 	@lru_cache(maxsize=64)
-	def _Execute(self, name, key):
+	def getMethodCached(self, name, key):
+		return self.getMethod( name )
+
+	def getMethod(self, name):
 		return getattr( self.callbackModule, name, self.empty_callback)
 
-	def Execute(self, name):
-		return self._Execute(
-			name, self.moduleOperator.text
-		)
+	def GetMethod(self, name, cached = True):
+		if cached:
+			return self.getMethodCached(
+				name, self.moduleOperator.text
+			)
+		return self.getMethod( name )
 
-	def Do_Callback(self, name, *arguments, **keywordarguments):
+	def DoCallback(self, name, *arguments, **keywordarguments):
 		if self.ownerComp.par.Cache.eval():
-			return self._Cached_Do_Callback(
+			return self._CachedDoCallback(
 				name, self.moduleOperator.text,
 				*arguments,
 				**keywordarguments
 			)
 		else:
-			return self._Do_Callback( 
+			return self._DoCallback( 
 				name, 
 				*arguments, 
 				**keywordarguments
 			)
-
-
+		
 	@lru_cache(maxsize=64)
-	def _Cached_Do_Callback(self, name, datText, *arguments, **keywordarguments):
-		return self._Do_Callback( name, *arguments, **keywordarguments)
+	def _CachedDoCallback(self, name, datText, *arguments, **keywordarguments):
+		return self._DoCallback( name, *arguments, **keywordarguments)
 	
-	def _Do_Callback(self, name, *arguments, **keywordarguments):
+	def _DoCallback(self, name, *arguments, **keywordarguments):
 		try:
-			return self.Execute(name)(*arguments, **keywordarguments)
+			return self.GetMethod(name)(*arguments, **keywordarguments)
 		except Exception as e:
 			if self.ownerComp.par.Gracefulerror.eval(): 
 				self.ownerComp.op("logger").Log( "Error during callback execution", e)
