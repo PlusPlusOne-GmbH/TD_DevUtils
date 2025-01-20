@@ -43,25 +43,32 @@ class extBananaRouter:
 			except Missmatch:
 				continue
 			break
-
-		if not matchedRoute:
+		else:
+			# This will be reached if we do not break the loop.
 			self.log("No Matching Route found.")
 			return False
 			# raise Missmatch(f"No valid Routeobject defined for {uri}")
 		
-		if self.ActiveRoute:
-			try:
-				self.ActiveRoute.preExit(matchedRoute, self.ownerComp)
-			except (Abort, Suspend) as e:
-				self.log("PreExit guard failed.", e)
-				return False
-
 		try:
+			self.ActiveRoute.preExit(matchedRoute, self.ownerComp)
 			matchedRoute.preEnter(self.ActiveRoute, self.ownerComp)
-		except (Abort, Suspend) as e:
-			self.log("PreEnter guard failed.", e)
+		except Abort as abortion:
+			self.log("Transition got aborted", abortion.with_traceback())
+			if abortion.redirect: self.Push( abortion.redirect )
 			return False
+		except Suspend as suspension:
+			self.log("Got suspended", suspension.with_traceback())
+			return False
+		except Exception as e:
+			raise e
 		
-		self.ownerComp.op("history").appendRow(matchedRoute._uri)
+		self.ActiveRoute.onExit(matchedRoute, self.ownerComp)
+		self.Emit(f"RouteExit_{self.ActiveRoute.Name}", self.ActiveRoute, matchedRoute, self.ownerComp)
+
 		self.Emit("RouteChange", self.ActiveRoute, matchedRoute, self.ownerComp)
+
+		matchedRoute.onEnter(self.ActiveRoute, self.ownerComp)
+		self.Emit(f"RouteEnter_{matchedRoute.Name}", self.ActiveRoute, matchedRoute, self.ownerComp)
+
+		self.ownerComp.op("history").appendRow(matchedRoute._uri)
 		self._ActiveRoute.val = matchedRoute

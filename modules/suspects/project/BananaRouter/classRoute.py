@@ -6,7 +6,7 @@ Saveversion : 2023.12000
 Info Header End'''
 
 from Exceptions import Suspend, Abort, Missmatch
-from typing import final, Final
+from typing import final, override
 from argparse import Namespace
 
 # from extBananaRouter import extBananaRouter
@@ -38,6 +38,8 @@ class Route():
     Name : str
     Path : str    
 
+    AllowedTransition : list[str] = ["*"]
+
     @property
     def Uri(self):
         return self._uri
@@ -52,6 +54,7 @@ class Route():
     def Abort( reason = "" ):
         raise Abort(reason)
 
+
     def preEnter(self, source:"Route", router:"extBananaRouter" ) -> bool:
         """
             Gets run after preExit of sourceroute is run.
@@ -59,10 +62,22 @@ class Route():
         """
         pass
     
+    def onEnter(self, source:"Route", router:"extBananaRouter" ) -> bool:
+        """
+            Gets executed if all prechecks pass.
+        """
+        pass  
+
     def preExit(self, target:"Route", router:"extBananaRouter") -> bool:
         """ 
             Gets run before preEnter of target route is run.
             call self.Suspend() or self.Abort() to halt transition.
+        """
+        pass
+
+    def onExit(self, target:"Route", router:"extBananaRouter") -> bool:
+        """ 
+            Gets executed if all prechecks pass.
         """
         pass
 

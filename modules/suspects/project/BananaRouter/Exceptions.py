@@ -8,6 +8,9 @@ class Suspend(Exception):
     pass
 
 class Abort(Exception):
+    def __init__(self, *args, redirect = ""):
+        super().__init__(*args)
+        self.redirect = redirect
     pass
 
 class Missmatch(Exception):
