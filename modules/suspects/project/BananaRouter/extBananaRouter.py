@@ -28,10 +28,11 @@ class extBananaRouter:
 		self.log = self.ownerComp.op("logger").Log
 		self.ownerComp.op("Emitter").Attach_Emitter(self)
 		
-		self._ActiveRoute = tdu.Dependency(Init(""))
+		self._ActiveRoute = tdu.Dependency(Init("", {}))
 		self.TargetRoute = None # Make dependable. Someday...
 
 		self._Mode = tdu.Dependency( Mode.Idle )
+		self.Push( self.ownerComp.par.Initroute.eval() )
 
 	@property
 	def Mode(self):
@@ -53,18 +54,18 @@ class extBananaRouter:
 	def asyncio(self):
 		return self.ownerComp.op("asyncIODependency").GetGlobalComponent()
 
-	def Push( self, uri , isAsync = True):
+	def Push( self, uri , isAsync = True, meta = {}):
 		if isAsync:
-			return self.asyncio.RunAsync( self._Push( uri ))
-		return self.asyncio.RunSync( self._Push( uri ))
+			return self.asyncio.RunAsync( self._Push( uri, meta ))
+		return self.asyncio.RunSync( self._Push( uri, meta ))
 	
-	async def _Push(self, uri):
+	async def _Push(self, uri, meta):
 
 		self._TargetRoute:Route = None
 		self.log("Pushing", uri)
 		for routeClass in self.routes:
 			try:
-				self._TargetRoute = routeClass( uri )
+				self._TargetRoute = routeClass( uri, meta )
 			except Missmatch:
 				continue
 			break

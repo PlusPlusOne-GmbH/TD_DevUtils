@@ -13,11 +13,12 @@ from argparse import Namespace
 
 class Route():
 
-    def __init__(self, uri):
+    def __init__(self, uri, meta):
         if not self.Name: raise ("Name Attribute needs to be defined.")
         if not self.Path: raise ("Path Attribute needs to be defined.")
         self._uri = uri
         self._parseUri()
+        self.Meta = meta
 
     def _parseUri(self):
         params = {}
@@ -34,7 +35,7 @@ class Route():
             raise Missmatch
         self.Params = Namespace(**params)
             
-
+    Meta : dict
     Name : str
     Path : str    
 
